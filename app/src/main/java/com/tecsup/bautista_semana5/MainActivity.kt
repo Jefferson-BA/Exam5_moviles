@@ -3,45 +3,57 @@ package com.tecsup.bautista_semana5
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.tecsup.bautista_semana5.ui.theme.Bautista_semana5Theme
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.tecsup.bautista_semana5.data.local.AppDatabase
+import com.tecsup.bautista_semana5.data.repository.ProductoRepository
+import com.tecsup.bautista_semana5.ui.ProductoViewModel
+import com.tecsup.bautista_semana5.ui.ProductoViewModelFactory
+import com.tecsup.bautista_semana5.ui.screens.FormScreen
+import com.tecsup.bautista_semana5.ui.screens.ListScreen
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
+        val db = AppDatabase.getInstance(this)
+        val repository = ProductoRepository(db.productoDao())
+        val factory = ProductoViewModelFactory(repository)
+
         setContent {
-            Bautista_semana5Theme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+            MaterialTheme {
+                Surface {
+                    val navController = rememberNavController()
+                    val viewModel: ProductoViewModel = viewModel(factory = factory)
+
+                    NavHost(
+                        navController = navController,
+                        startDestination = "list"
+                    ) {
+                        composable("list") {
+                            ListScreen(
+                                viewModel = viewModel,
+                                onNuevoClick = {
+                                    navController.navigate("form")
+                                },
+                                onEditarClick = {
+                                    navController.navigate("form")
+                                }
+                            )
+                        }
+                        composable("form") {
+                            FormScreen(
+                                viewModel = viewModel,
+                                onBack = { navController.popBackStack() }
+                            )
+                        }
+                    }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    Bautista_semana5Theme {
-        Greeting("Android")
     }
 }
